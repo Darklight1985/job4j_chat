@@ -1,5 +1,7 @@
 package ru.job4j.controller;
 
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.web.bind.annotation.*;
 import ru.job4j.model.Person;
@@ -23,16 +25,22 @@ public class UserController {
     }
 
     @PostMapping("/sign-up")
-    public void signUp(@RequestBody Person person) {
+    public ResponseEntity<String> signUp(@RequestBody Person person) {
         if (isNull(person.getUsername()) || isNull(person.getPassword().isEmpty())) {
             throw new NullPointerException("Username and password mustn't be empty");
         }
         person.setPassword(encoder.encode(person.getPassword()));
         users.save(person);
+        return new ResponseEntity<>(
+                "Пользователь зарегистрирован",
+                HttpStatus.ACCEPTED
+        );
     }
 
     @GetMapping("/all")
-    public List<Person> findAll() {
-        return users.findAll();
+    public ResponseEntity<List<Person>> findAll() {
+        return new ResponseEntity<>(users.findAll(),
+                HttpStatus.OK
+                );
     }
 }
