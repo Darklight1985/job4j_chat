@@ -12,7 +12,7 @@ public class Message {
     private String description;
 
     @Column(name = "person_id")
-   private int personId;
+    private int personId;
 
     public int getId() {
         return id;

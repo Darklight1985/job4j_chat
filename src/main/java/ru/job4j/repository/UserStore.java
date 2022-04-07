@@ -15,7 +15,6 @@ public class UserStore {
         users.put(person.getUsername(), person);
     }
 
-
     public Person findByUsername(String username) {
         return users.get(username);
     }

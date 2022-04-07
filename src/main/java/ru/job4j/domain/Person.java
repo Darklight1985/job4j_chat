@@ -10,9 +10,9 @@ public class Person {
     private int id;
 
     private String nickname;
-    @Column(name = "role_id")
-    private int roleId;
-    @Transient
+
+    @ManyToOne
+    @JoinColumn(name = "role_id")
     private Role role;
 
     public Role getRole() {
@@ -39,14 +39,6 @@ public class Person {
         this.nickname = nickname;
     }
 
-    public int getRoleId() {
-        return roleId;
-    }
-
-    public void setRoleId(int roleId) {
-        this.roleId = roleId;
-    }
-
     @Override
     public boolean equals(Object o) {
         if (this == o) {
@@ -56,12 +48,12 @@ public class Person {
             return false;
         }
         Person person = (Person) o;
-        return id == person.id && roleId == person.roleId
-                && Objects.equals(nickname, person.nickname) && Objects.equals(role, person.role);
+        return id == person.id && Objects.equals(nickname, person.nickname)
+                && Objects.equals(role, person.role);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(id, nickname, roleId, role);
+        return Objects.hash(id, nickname, role);
     }
 }

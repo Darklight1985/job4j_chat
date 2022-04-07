@@ -9,6 +9,8 @@ import ru.job4j.repository.RoleRepository;
 
 import java.util.List;
 
+import static java.util.Objects.isNull;
+
 @RestController
 @RequestMapping("/person")
 public class PersonController {
@@ -27,9 +29,6 @@ public class PersonController {
     @GetMapping("/")
     public List<Person> findAll() {
         List<Person> personList = (List<Person>) persons.findAll();
-        for (Person person: personList) {
-            person.setRole(this.roles.findById(person.getRoleId()).get());
-        }
         return personList;
     }
 
@@ -40,14 +39,16 @@ public class PersonController {
                 person.orElse(new Person()),
                 person.isPresent() ? HttpStatus.OK : HttpStatus.NOT_FOUND
         );
-        person.get().setRole(this.roles.findById(person.get().getRoleId()).get());
         return  responseEntity;
     }
 
     @PostMapping("/")
     public ResponseEntity<Person> create(@RequestBody Person person) {
-        person.setRole(this.roles.findById(person.getRoleId()).get());
-        return new ResponseEntity<Person>(
+        if (isNull(person.getNickname())) {
+            throw new NullPointerException("Nickname mustn't be empty");
+        }
+        person.setRole(roles.findById(1).get());
+        return new ResponseEntity<>(
                 this.persons.save(person),
                 HttpStatus.CREATED
         );
@@ -55,6 +56,9 @@ public class PersonController {
 
     @PutMapping("/")
     public ResponseEntity<Void> update(@RequestBody Person person) {
+        if (isNull(person.getNickname())) {
+            throw new NullPointerException("Nickname mustn't be empty");
+        }
         this.persons.save(person);
         return ResponseEntity.ok().build();
     }

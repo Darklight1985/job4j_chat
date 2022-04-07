@@ -7,6 +7,8 @@ import ru.job4j.repository.UserStore;
 
 import java.util.List;
 
+import static java.util.Objects.isNull;
+
 @RestController
 @RequestMapping("/users")
 public class UserController {
@@ -22,6 +24,9 @@ public class UserController {
 
     @PostMapping("/sign-up")
     public void signUp(@RequestBody Person person) {
+        if (isNull(person.getUsername()) || isNull(person.getPassword().isEmpty())) {
+            throw new NullPointerException("Username and password mustn't be empty");
+        }
         person.setPassword(encoder.encode(person.getPassword()));
         users.save(person);
     }

@@ -48,6 +48,9 @@ public class RoomController {
      */
     @PutMapping("/{id}")
     public ResponseEntity<Void> addPerson(@PathVariable int id, @RequestBody Person person) {
+        if (isNull(person.getNickname())) {
+            throw new NullPointerException("Nickname mustn't be empty");
+        }
         var room = roomRepository.findById(id);
         if (isNull(room)) {
             return new ResponseEntity<>(HttpStatus.NOT_FOUND);
