@@ -8,11 +8,14 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.server.ResponseStatusException;
 import ru.job4j.domain.Message;
+import ru.job4j.repository.MessageRepository;
 import ru.job4j.repository.RoomRepository;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
+import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
 import java.util.HashMap;
 
 @RestController
@@ -22,10 +25,13 @@ public class MessageController {
     private static final Logger LOGGER =
             LoggerFactory.getLogger(UserController.class.getSimpleName());
     private final RoomRepository roomRepository;
+    private final MessageRepository messages;
     private final ObjectMapper objectMapper;
 
-    public MessageController(RoomRepository roomRepository, ObjectMapper objectMapper) {
+    public MessageController(RoomRepository roomRepository,
+                             MessageRepository messages, ObjectMapper objectMapper) {
         this.roomRepository = roomRepository;
+        this.messages = messages;
         this.objectMapper = objectMapper;
     }
 
@@ -51,6 +57,39 @@ public class MessageController {
             HttpStatus.ACCEPTED
           );
         }
+    }
+
+    @PatchMapping("/send")
+    public Message send(@RequestBody Message message)
+            throws InvocationTargetException, IllegalAccessException {
+        var current = messages.findById(message.getId());
+        if (current == null) {
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND);
+        }
+        var methods = current.getClass().getDeclaredMethods();
+        var namePerMethod = new HashMap<String, Method>();
+        for (var method: methods) {
+            var name = method.getName();
+            if (name.startsWith("get") || name.startsWith("set")) {
+                namePerMethod.put(name, method);
+            }
+        }
+        for (var name : namePerMethod.keySet()) {
+            if (name.startsWith("get")) {
+                var getMethod = namePerMethod.get(name);
+                var setMethod = namePerMethod.get(name.replace("get", "set"));
+                if (setMethod == null) {
+                    throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
+                            "Invalid properties mapping");
+                }
+                var newValue = getMethod.invoke(message);
+                if (newValue != null) {
+                    setMethod.invoke(current, newValue);
+                }
+            }
+        }
+        messages.save(message);
+        return current.get();
     }
 
     @ExceptionHandler(value = { IllegalArgumentException.class })
