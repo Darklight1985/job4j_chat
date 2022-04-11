@@ -6,12 +6,17 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.client.RestTemplate;
+import org.springframework.web.server.ResponseStatusException;
+import ru.job4j.domain.Message;
 import ru.job4j.domain.Person;
 import ru.job4j.domain.Room;
 import ru.job4j.handlers.Operation;
 import ru.job4j.repository.RoomRepository;
 
 import javax.validation.Valid;
+import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
+import java.util.HashMap;
 import java.util.List;
 
 import static java.util.Objects.isNull;
@@ -71,7 +76,8 @@ public class RoomController {
      */
     @DeleteMapping("/{id}")
     @Validated(Operation.OnDelete.class)
-    public ResponseEntity<Void> deletePerson(@Valid @PathVariable int id, @RequestBody Person person) {
+    public ResponseEntity<Void> deletePerson(@Valid @PathVariable int id,
+                                             @RequestBody Person person) {
         var room = roomRepository.findById(id);
         if (isNull(room)) {
             return new ResponseEntity<>(HttpStatus.NOT_FOUND);
@@ -79,5 +85,38 @@ public class RoomController {
             room.get().deletePerson(person);
             return ResponseEntity.ok().build();
         }
+    }
+
+    @PatchMapping("/send")
+    public Room send(@RequestBody Room room)
+            throws InvocationTargetException, IllegalAccessException {
+        var current = roomRepository.findById(room.getId());
+        if (current == null) {
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND);
+        }
+        var methods = current.getClass().getDeclaredMethods();
+        var namePerMethod = new HashMap<String, Method>();
+        for (var method: methods) {
+            var name = method.getName();
+            if (name.startsWith("get") || name.startsWith("set")) {
+                namePerMethod.put(name, method);
+            }
+        }
+        for (var name : namePerMethod.keySet()) {
+            if (name.startsWith("get")) {
+                var getMethod = namePerMethod.get(name);
+                var setMethod = namePerMethod.get(name.replace("get", "set"));
+                if (setMethod == null) {
+                    throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
+                            "Invalid properties mapping");
+                }
+                var newValue = getMethod.invoke(room);
+                if (newValue != null) {
+                    setMethod.invoke(current, newValue);
+                }
+            }
+        }
+        roomRepository.save(room);
+        return current.get();
     }
 }
