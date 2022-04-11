@@ -5,14 +5,17 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.server.ResponseStatusException;
 import ru.job4j.domain.Message;
+import ru.job4j.handlers.Operation;
 import ru.job4j.repository.MessageRepository;
 import ru.job4j.repository.RoomRepository;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
+import javax.validation.Valid;
 import java.io.IOException;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
@@ -42,7 +45,9 @@ public class MessageController {
      * @return
      */
     @PostMapping("/{id}")
-    public ResponseEntity<Message> create(@PathVariable int id, @RequestBody Message message) {
+    @Validated(Operation.OnCreate.class)
+    public ResponseEntity<Message> create(@Valid @PathVariable int id,
+                                          @RequestBody Message message) {
         if (message.getDescription().equals("")) {
             throw new IllegalArgumentException("Message is empty");
         }

@@ -3,12 +3,15 @@ package ru.job4j.controller;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.client.RestTemplate;
 import ru.job4j.domain.Person;
 import ru.job4j.domain.Room;
+import ru.job4j.handlers.Operation;
 import ru.job4j.repository.RoomRepository;
 
+import javax.validation.Valid;
 import java.util.List;
 
 import static java.util.Objects.isNull;
@@ -47,7 +50,7 @@ public class RoomController {
      * @return
      */
     @PutMapping("/{id}")
-    public ResponseEntity<Void> addPerson(@PathVariable int id, @RequestBody Person person) {
+    public ResponseEntity<Void> addPerson(@Valid @PathVariable int id, @RequestBody Person person) {
         if (isNull(person.getNickname())) {
             throw new NullPointerException("Nickname mustn't be empty");
         }
@@ -67,7 +70,8 @@ public class RoomController {
      * @return
      */
     @DeleteMapping("/{id}")
-    public ResponseEntity<Void> deletePerson(@PathVariable int id, @RequestBody Person person) {
+    @Validated(Operation.OnDelete.class)
+    public ResponseEntity<Void> deletePerson(@Valid @PathVariable int id, @RequestBody Person person) {
         var room = roomRepository.findById(id);
         if (isNull(room)) {
             return new ResponseEntity<>(HttpStatus.NOT_FOUND);

@@ -1,6 +1,10 @@
 package ru.job4j.domain;
 
+import ru.job4j.handlers.Operation;
+
 import javax.persistence.*;
+import javax.validation.constraints.NotBlank;
+import javax.validation.constraints.NotNull;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
@@ -9,11 +13,14 @@ import java.util.Objects;
 public class Room {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @NotNull(message = "Id must be non null",
+            groups = {Operation.OnUpdate.class, Operation.OnDelete.class})
     private int id;
 
+    @NotBlank(message = "Name of room must be not empty")
     private String name;
     @Transient
-    private List<Person> persons = new ArrayList<>();
+    private List<@NotBlank(message = "Need to set person") Person> persons = new ArrayList<>();
     @Transient
     private List<Message> messages = new ArrayList<>();
 

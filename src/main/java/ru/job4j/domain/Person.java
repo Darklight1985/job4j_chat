@@ -1,18 +1,26 @@
 package ru.job4j.domain;
 
+import ru.job4j.handlers.Operation;
+
 import javax.persistence.*;
+import javax.validation.constraints.NotBlank;
+import javax.validation.constraints.NotNull;
 import java.util.Objects;
 
 @Entity
 public class Person {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @NotNull(message = "Id must be non null",
+            groups = {Operation.OnUpdate.class, Operation.OnDelete.class})
     private int id;
 
+    @NotBlank(message = "Nickname must be not empty")
     private String nickname;
 
     @ManyToOne
     @JoinColumn(name = "role_id")
+    @NotNull(message = "You need to set the role")
     private Role role;
 
     public Role getRole() {

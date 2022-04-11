@@ -2,12 +2,15 @@ package ru.job4j.controller;
 
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.server.ResponseStatusException;
 import ru.job4j.domain.Person;
+import ru.job4j.handlers.Operation;
 import ru.job4j.repository.PersonRepository;
 import ru.job4j.repository.RoleRepository;
 
+import javax.validation.Valid;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.util.HashMap;
@@ -47,7 +50,8 @@ public class PersonController {
     }
 
     @PostMapping("/")
-    public ResponseEntity<Person> create(@RequestBody Person person) {
+    @Validated(Operation.OnCreate.class)
+    public ResponseEntity<Person> create(@Valid @RequestBody Person person) {
         if (isNull(person.getNickname())) {
             throw new NullPointerException("Nickname mustn't be empty");
         }
@@ -94,7 +98,8 @@ public class PersonController {
     }
 
     @PutMapping("/")
-    public ResponseEntity<Void> update(@RequestBody Person person) {
+    @Validated(Operation.OnUpdate.class)
+    public ResponseEntity<Void> update(@Valid @RequestBody Person person) {
         if (isNull(person.getNickname())) {
             throw new NullPointerException("Nickname mustn't be empty");
         }
@@ -103,7 +108,8 @@ public class PersonController {
     }
 
     @DeleteMapping("/{id}")
-    public ResponseEntity<Void> delete(@PathVariable int id) {
+    @Validated(Operation.OnDelete.class)
+    public ResponseEntity<Void> delete(@Valid @PathVariable int id) {
         Person person = new Person();
         person.setId(id);
         this.persons.delete(person);
