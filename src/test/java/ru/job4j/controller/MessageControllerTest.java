@@ -20,8 +20,7 @@ import java.util.Optional;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.is;
 import static org.mockito.Mockito.verify;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
@@ -46,9 +45,9 @@ public class MessageControllerTest {
         message.setDescription("message");
         message.setPersonId(1);
         Mockito.when(messageRepository.findById(Mockito.anyInt())).thenReturn(Optional.of(message));
-        this.mockMvc.perform(post("/message/send").params(requestParams))
+        this.mockMvc.perform(patch("/message/send").params(requestParams))
                 .andDo(print())
-                .andExpect(status().is2xxSuccessful());
+                .andExpect(status().isOk());
         ArgumentCaptor<Message> argument = ArgumentCaptor.forClass(Message.class);
         verify(messageRepository).save(argument.capture());
         assertThat(argument.getValue().getDescription(), is("message"));
