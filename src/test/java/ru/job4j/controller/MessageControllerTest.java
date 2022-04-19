@@ -1,6 +1,8 @@
 package ru.job4j.controller;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.ObjectWriter;
+import com.fasterxml.jackson.databind.SerializationFeature;
 import org.junit.Ignore;
 import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.util.LinkedMultiValueMap;
@@ -26,6 +28,7 @@ import java.util.Optional;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.is;
 import static org.mockito.Mockito.verify;
+import static org.springframework.http.MediaType.APPLICATION_JSON_UTF8;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
@@ -52,8 +55,14 @@ public class MessageControllerTest {
         message.setId(1);
         message.setDescription("message");
         message.setPersonId(1);
+        ObjectMapper mapper = new ObjectMapper();
+        mapper.configure(SerializationFeature.WRAP_ROOT_VALUE, false);
+        ObjectWriter ow = mapper.writer().withDefaultPrettyPrinter();
+        String requestJson=ow.writeValueAsString(message);
         Mockito.when(messageRepository.findById(Mockito.anyInt())).thenReturn(Optional.of(message));
-        this.mockMvc.perform(patch("/message/send").params(requestParams))
+        this.mockMvc.perform(patch("/message/send")
+                        .contentType(APPLICATION_JSON_UTF8)
+                        .content(requestJson))
                 .andDo(print())
                 .andExpect(status().isOk());
         ArgumentCaptor<Message> argument = ArgumentCaptor.forClass(Message.class);
