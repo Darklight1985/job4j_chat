@@ -1,5 +1,6 @@
 package ru.job4j.controller;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.Ignore;
 import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.util.LinkedMultiValueMap;
@@ -13,8 +14,13 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.test.web.servlet.MockMvc;
 import ru.job4j.Job4jChatApplication;
+import ru.job4j.model.Person;
 import ru.job4j.repository.MessageRepository;
+import ru.job4j.repository.UserStore;
 
+import javax.servlet.http.HttpServletResponse;
+import javax.servlet.http.HttpServletResponseWrapper;
+import javax.xml.bind.SchemaOutputResolver;
 import java.util.Optional;
 
 import static org.hamcrest.MatcherAssert.assertThat;
@@ -31,10 +37,12 @@ public class MessageControllerTest {
     private MockMvc mockMvc;
     @MockBean
     private MessageRepository messageRepository;
+    @MockBean
+    private UserStore userStore;
 
     @Test
-    @Ignore
     @WithMockUser
+    @Ignore
     public void whenAddPatch() throws Exception {
         LinkedMultiValueMap<String, String> requestParams = new LinkedMultiValueMap<>();
         requestParams.add("id", "1");
@@ -51,5 +59,21 @@ public class MessageControllerTest {
         ArgumentCaptor<Message> argument = ArgumentCaptor.forClass(Message.class);
         verify(messageRepository).save(argument.capture());
         assertThat(argument.getValue().getDescription(), is("message"));
+    }
+
+    @Test
+    public void whenWriteMApper() throws Exception {
+        Message message = new Message();
+        message.setId(1);
+        message.setDescription("message");
+        message.setPersonId(1);
+        ObjectMapper mapper = new ObjectMapper();
+        String str = mapper.writeValueAsString(message);
+        String json  = "{"
+        + "\"id\":1,"
+                + "\"description\":\"message\","
+                + "\"personId\":1}";
+        System.out.println(str);
+        assertThat(str, is(json));
     }
 }
