@@ -65,25 +65,35 @@ public class MessageController {
     }
 
     @PatchMapping("/send")
-    public ResponseEntity<Message> send(@RequestBody Message message)
+    public Message send(@RequestBody Message message)
             throws InvocationTargetException, IllegalAccessException {
         var current = messages.findById(message.getId());
         if (current == null) {
             throw new ResponseStatusException(HttpStatus.NOT_FOUND);
         }
-        return new ResponseEntity<>(messages.save(message), HttpStatus.OK);
-
-    }
-
-    @ExceptionHandler(value = { IllegalArgumentException.class })
-    public void exceptionHandler(Exception e, HttpServletRequest request,
-                                 HttpServletResponse response) throws IOException {
-        response.setStatus(HttpStatus.BAD_REQUEST.value());
-        response.setContentType("application/json");
-        response.getWriter().write(objectMapper.writeValueAsString(new HashMap<>() { {
-            put("message", e.getMessage());
-            put("type", e.getClass());
-        }}));
-        LOGGER.error(e.getLocalizedMessage());
+        var methods = current.getClass().getDeclaredMethods();
+        var namePerMethod = new HashMap<String, Method>();
+        for (var method: methods) {
+            var name = method.getName();
+            if (name.startsWith("get") || name.startsWith("set")) {
+                namePerMethod.put(name, method);
+            }
+        }
+        for (var name : namePerMethod.keySet()) {
+            if (name.startsWith("get")) {
+                var getMethod = namePerMethod.get(name);
+                var setMethod = namePerMethod.get(name.replace("get", "set"));
+                if (setMethod == null) {
+                    throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
+                            "Invalid properties mapping");
+                }
+                var newValue = getMethod.invoke(message);
+                if (newValue != null) {
+                    setMethod.invoke(current, newValue);
+                }
+            }
+        }
+        messages.save(message);
+        return current.get();
     }
 }
