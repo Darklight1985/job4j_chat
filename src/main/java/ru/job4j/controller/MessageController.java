@@ -67,7 +67,7 @@ public class MessageController {
     @PatchMapping("/send")
     public Message send(@RequestBody Message message)
             throws InvocationTargetException, IllegalAccessException {
-        var current = messages.findById(message.getId());
+        var current = messages.findById(message.getId()).get();
         if (current == null) {
             throw new ResponseStatusException(HttpStatus.NOT_FOUND);
         }
@@ -94,6 +94,6 @@ public class MessageController {
             }
         }
         messages.save(message);
-        return current.get();
+        return current;
     }
 }
