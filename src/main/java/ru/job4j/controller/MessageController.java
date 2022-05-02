@@ -95,5 +95,6 @@ public class MessageController {
         }
         messages.save(message);
         return current;
+
     }
 }
